@@ -20,3 +20,4 @@ int val_ent_binaire(const liste_bit b)
     }
     return r;
 }
+test
