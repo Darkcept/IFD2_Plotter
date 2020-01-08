@@ -11,6 +11,10 @@
 //#define topicX "/plotter/posX"
 //#define topicY "/plotter/posY"
 
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
+
 //proto
 /*
 void setup_wifi();
@@ -21,6 +25,19 @@ void reconnect();
 void loop();
 */
 
+#define USMIN  600 // This is the rounded 'minimum' microsecond length based on the minimum pulse of 150
+#define USMAX  2400 // This is the rounded 'maximum' microsecond length based on the maximum pulse of 600
+#define SERVO_FREQ 50 // Analog servos run at ~50 Hz updates
+#define NEUTRE 375
+#define NEUTREM 1500
+#define VITESSE 1
+#define SERVO3MIN 200
+#define SERVO3MAX 380
+#define SERVO2MIN 322
+#define SERVO2MAX 480
+#define SERVO1MIN
+#define SERVO1MAX
+
 #include <Arduino.h>
 
 String instruct;
@@ -28,6 +45,18 @@ char pos[4];
 int move;
 int speed=10; //vitesse moteur
 
+uint8_t servonum1 = 0;
+uint8_t servonum2 = 4;
+uint8_t servonum3 = 3;
+int joysticky1 = 34;
+int joystickx1 = 39;
+int x_pos1;
+int x_pos2;
+int y_pos1;
+int y_pos2;
+int pos1=NEUTRE,pos2=NEUTRE,pos3=NEUTRE;
+int clic=1;
+int pos33;
 
 const char* ssid = "AndroidM";
 const char* password = "fpjj5481";
@@ -90,22 +119,22 @@ int draw(String instruct)
       move=atoi(&pos[1]);
       Serial.println("Move X");
       Serial.println(move);
-        //bouger les moteur sur X
+        pwm.setPWM(servonum3, 0, (move*380)/24-200);
         break;
       case 'Y':
       move=atoi(&pos[1]);
       Serial.println("Move Y");
       Serial.println(move);
-        //bouger les moteur sur Y
+        pwm.setPWM(servonum2, 0, (move*480)/32-322);
         break;
       case 'Z':
       move=atoi(&pos[1]);
         if(move==0) {
           Serial.println("Stylo baissé");
-          //baisser le stylo
+          //pwm.setPWM(servonum1, 0, );
         } else if(move!=0) {
           Serial.println("Stylo remonté");
-          //monter le stylo
+          //pwm.setPWM(servonum1, 0, );
         }
         break;
       default:
@@ -147,6 +176,14 @@ void callback(char* topic, byte* message, unsigned int length)
 
 void setup()
 {
+  
+  pinMode (joystickx1, INPUT) ;                     
+  pinMode (joysticky1, INPUT) ;
+  pwm.begin();
+  pwm.setOscillatorFrequency(27000000);  // The int.osc. is closer to 27MHz  
+  pwm.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz updates
+  delay(10);
+
   Serial.begin(9600);  
 
   setup_wifi();
@@ -154,6 +191,19 @@ void setup()
   client.setCallback(callback);
 
   pinMode(ledPin, OUTPUT);
+}
+
+void setServoPulse(uint8_t n,double pulse) {
+  double pulselength;
+  pulselength = 1000000;   // 1,000,000 us per second
+  pulselength /= SERVO_FREQ;   // Analog servos run at ~60 Hz updates
+  Serial.print(pulselength); Serial.println(" us per period"); 
+  pulselength /= 4096;  // 12 bits of resolution
+  Serial.print(pulselength); Serial.println(" us per bit"); 
+  pulse *= 1000000;  // convert input seconds to us
+  pulse /= pulselength;
+  Serial.println(pulse);
+  pwm.setPWM(n, 0, pulse);
 }
 
 void reconnect()
