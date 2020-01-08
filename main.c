@@ -20,12 +20,17 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 #define SERVO_FREQ 50 // Analog servos run at ~50 Hz updates
 #define NEUTRE 375
 #define NEUTREM 1500
-#define VITESSE 10
-#define VITESSEL 1
+#define VITESSE 1
+#define SERVO3MIN 200
+#define SERVO3MAX 380
+#define SERVO2MIN 322
+#define SERVO2MAX 480
+#define SERVO1MIN
+#define SERVO1MAX
 // our servo # counter
 uint8_t servonum = 0;
-uint8_t servonum2 = 1;
-uint8_t servonum3 = 2;
+uint8_t servonum2 = 4;
+uint8_t servonum3 = 3;
 int joysticky1 = 34;
 int joystickx1 = 39;
 int joysticky2 = 36;
@@ -38,6 +43,7 @@ int y_pos1;
 int y_pos2;
 int pos1=NEUTRE,pos2=NEUTRE,pos3=NEUTRE;
 int clic=1;
+int pos33;
 
 void setup() 
 {
@@ -74,125 +80,83 @@ void setServoPulse(uint8_t n,double pulse) {
 }
 
 void loop() {
-  // Drive each servo one at a time using setPWM()
-    x_pos1 = analogRead (joystickx1) ;  
-    y_pos1 = analogRead (joysticky1) ;
-    x_pos2 = analogRead (joystickx2) ;  
-    y_pos2 = analogRead (joysticky2) ;
-    //Serial.println(x_pos1);
-    //Serial.println(x_pos2);
-    //Serial.println(y_pos1);
-    //Serial.println(y_pos2);
+    Serial.println(pos1);
+    //Serial.println(pos2);
+    if(x_pos2!=analogRead(joystickx2))
+    {
     if(pos3>600)
     {
-        pos3 = 0;
+        pos3 = 600;
         
     }  
-    else if(pos3<0)
+    else if(pos3<80)
     {
-        pos3=600;
+        pos3=80;
     }
     else
     {
       switch(x_pos2)
     {
-        case 0 ... 1000 : 
+        case 0 ... 1800 : 
             pos3=pos3+VITESSE;
             pwm.setPWM(servonum, 0, pos3);
-        
-        break;
-        case 1001 ... 1800 : 
-            pos3=pos3+VITESSEL;
-            pwm.setPWM(servonum, 0, pos3);
-        
         break;
         case 1801 ... 1949 : ;
         break;
-        case 1950 ... 3000 : 
-            pos3=pos3-VITESSEL;
-            pwm.setPWM(servonum, 0, pos3);
-        
-        break;
-
-        case 3001 ... 4095 : 
+        case 1950 ... 4095 : 
             pos3=pos3-VITESSE;
             pwm.setPWM(servonum, 0, pos3);
-        
         break;
         default:;
     }
     }
-    if(pos2>600)
+    }
+    if(pos2>SERVO2MAX)
     {
-        pos2 = 0;
+        pos2 = SERVO2MAX;
         
     }  
-    else if(pos2<0)
+    else if(pos2<SERVO2MIN)
     {
-        pos2=600;
+        pos2=SERVO2MIN;
     }
     else
     {
       switch(y_pos1)
     {
-        case 0 ... 1000 : 
+        case 0 ... 1800 : 
             pos2=pos2+VITESSE;
             pwm.setPWM(servonum2, 0, pos2);
-        
-        break;
-        case 1001 ... 1800 : 
-            pos2=pos2+VITESSEL;
-            pwm.setPWM(servonum2, 0, pos2);
-        
         break;
         case 1801 ... 1949 : ;
         break;
-        case 1950 ... 3000 : 
-            pos2=pos2-VITESSEL;
-            pwm.setPWM(servonum2, 0, pos2);
-        
-        break;
-
-        case 3001 ... 4095 : 
+        case 1950 ... 4095 : 
             pos2=pos2-VITESSE;
             pwm.setPWM(servonum2, 0, pos2);
-        
         break;
         default:;
     }
     }
-    if(pos1>600)
+    if(pos1>SERVO3MAX)
     {
-        pos1 = 0;
-        
+        pos1=SERVO3MAX;
     }  
-    else if(pos1<0)
+    else if(pos1<SERVO3MIN)
     {
-        pos1=600;
+        pos1=SERVO3MIN;
     }
     else
     {
       switch(x_pos1)
     {
-        case 0 ... 1000 : 
+        case 0 ... 1800: 
             pos1=pos1+VITESSE;
-            pwm.setPWM(servonum3, 0, pos1);
-        
-        break;
-        case 1001 ... 1800 : 
-            pos1=pos1+VITESSEL;
             pwm.setPWM(servonum3, 0, pos1);
         
         break;
         case 1801 ... 1949 : ;
         break;
-        case 1950 ... 3000 : 
-            pos1=pos1-VITESSEL;
-            pwm.setPWM(servonum3, 0, pos1);
-        
-        break;
-
-        case 3001 ... 4095 : 
+        case 1950 ... 4095 : 
             pos1=pos1-VITESSE;
             pwm.setPWM(servonum3, 0, pos1);
         
@@ -201,6 +165,10 @@ void loop() {
     }
     }
     delay(10);
+    x_pos1 = analogRead (joystickx1) ;  
+    y_pos1 = analogRead (joysticky1) ;
+    x_pos2 = analogRead (joystickx2) ;  
+    y_pos2 = analogRead (joysticky2) ;
     /*
     for (uint16_t pulselen = SERVOMIN; pulselen < SERVOMAX; pulselen=pulselen+10) 
     {
