@@ -3,33 +3,21 @@
 #include <Wire.h>
 #include <stdio.h>
 #include <string.h>
-//#include <Adafruit_BME280.h>
-//#include <Adafruit_Sensor.h>
-//#include "ArduinoJson-v6.13.0.h"
 #define topicIn "/plotter/stream"
 #define topicOut "/plotter/ack"
-//#define topicX "/plotter/posX"
-//#define topicY "/plotter/posY"
 
 #include <Adafruit_PWMServoDriver.h>
 #include <math.h>
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
-
-//proto
-/*
-void setup_wifi();
-void callback(char* topic, byte* message, unsigned int length);
-int draw(string message);
-void setup();
-void reconnect();
-void loop();
-*/
 
 #define USMIN  600 // This is the rounded 'minimum' microsecond length based on the minimum pulse of 150
 #define USMAX  2400 // This is the rounded 'maximum' microsecond length based on the maximum pulse of 600
 #define NEUTRE 375
 #define NEUTREM 1500
 #define VITESSE 1
+
+//on stock la valeur maximale et minimale des angles moteurs
+
 #define SERVO3MIN 200
 #define SERVO3MAX 600//x
 
@@ -70,11 +58,9 @@ long lastMsg = 0;
 char msg[50];
 int value = 0;
 
-//float posX=-1;
-//float posY=-1;
-
-// LED Pin
 const int ledPin = 13;
+
+//connection au wifi puis au serveur mqtt
 
 void setup_wifi() {
   delay(10);
@@ -96,24 +82,24 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
+//boucle de dessin du plotter
+
 int draw(String instruct)
 {
     int success=1;
-
     Serial.println(instruct);
     if (instruct=="G00") {
       speed=50; //vitesse rapide
-      //Serial.println("Gotta go fast");
     } else if (instruct=="G01") {
       speed=10; //vitesse ecriture
-      //Serial.println("Gotta go slow");
     } else {
       instruct.toCharArray(pos,5);
       switch (pos[0]) {
+          //on traite le GCode pour définir si le bras doit bouger sur le moteur 1 ou le moteur 2
       case 'X':
-      move=atoi(&pos[1]);
+      move=atoi(&pos[1]); //convertissage de l'instruction en int lisible par l'arduino
       Serial.println(move);
-        pwm.setPWM(servonum3,0,map(move,0,240,SERVO3MIN,SERVO3MAX));
+        pwm.setPWM(servonum3,0,map(move,0,240,SERVO3MIN,SERVO3MAX)); //le bras du servo correspondant bouge proportionnelement a son angle maximum
         break;
       case 'Y':
       move=atoi(&pos[1]);
@@ -122,7 +108,7 @@ int draw(String instruct)
         break;
       case 'Z':
       move=atoi(&pos[1]);
-        if(move==0) {
+        if(move==0) { //dernier test pour baisser ou lever le stylo
           Serial.println("Stylo baissé");
           pwm.setPWM(servonum1, 0, SERVO1MAX);
         } else if(move!=0) {
@@ -165,9 +151,6 @@ void callback(char* topic, byte* message, unsigned int length)
 
 void setup()
 {
-  
-  pinMode (joystickx1, INPUT) ;                     
-  pinMode (joysticky1, INPUT) ;
   pwm.begin();
   pwm.setOscillatorFrequency(27000000);  // The int.osc. is closer to 27MHz  
   pwm.setPWMFreq(50);  // Analog servos run at ~50 Hz updates
@@ -213,9 +196,6 @@ void loop()
   if (now - lastMsg > 5000)
   {
     lastMsg = now;
-
-    //client.publish(topicX,gcvt(posX));
-    //client.publish(topicY,gcvt(posY));
 
   }
 }
